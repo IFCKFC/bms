@@ -80,22 +80,15 @@ bms/
 ## 数据库配置
 
 在 app.py 中，数据库使用 SQLite，配置如下：
-
-```python
    app.config['SQLALCHEMY_DATABASE_URI'] ='sqlite:///bookstore.db'
-```
 
-可根据需要修改数据库连接字符串以使用其他数据库，如 MySQL 或 PostgreSQL。
+可根据需要修改数据库连接字符串以使用其他数据库，如 MySQL 或 PostgresSQL。
 
 ## 运行项目
 
 1. 确保已经安装了所需的 Python 库。
 2. 执行以下命令启动 Flask 应用：
-
-```bash
    python bms/app.py
-```
-
 3. 打开浏览器，访问 http://127.0.0.1:5000 即可使用系统。
 
 ## 使用说明
