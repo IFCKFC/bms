@@ -52,31 +52,6 @@
    pip install -r requirements.txt
 ```
 
-## 项目结构一览
-
-bms/
-├── app.py # Flask 应用的主文件，包含路由和模型定义
-├── instance/
-│ ├── bookstore.db # SQLite 数据库文件
-│ └── init.sql # 数据库初始化脚本，包含表结构和触发器的创建
-├── templates/
-│ ├── base.html # 基础模板文件，定义了页面的基本结构和样式
-│ ├── add_book.html # 添加书籍的页面模板
-│ ├── add_journal.html # 添加期刊的页面模板
-│ ├── add_customer.html # 添加客户的页面模板
-│ ├── add_borrow.html # 添加借阅记录的页面模板
-│ ├── add_sale.html # 添加销售记录的页面模板
-│ ├── books.html # 书籍管理页面模板
-│ ├── journals.html # 期刊管理页面模板
-│ ├── customers.html # 客户管理页面模板
-│ ├── borrows.html # 借阅记录管理页面模板
-│ ├── sales.html # 销售记录管理页面模板
-│ ├── returns.html # 归还处理页面模板
-│ ├── index.html # 首页模板
-│ └── statistics.html # 统计信息页面模板
-└── static/
-  └── upc_logo.jpeg # 静态图片文件(中国石油大学(华东)校徽)
-
 ## 数据库配置
 
 在 app.py 中，数据库使用 SQLite，配置如下：
