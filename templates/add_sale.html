@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-800 mb-2">新增销售</h2>
+    <p class="text-gray-600">记录新的销售交易</p>
+</div>
+
+<div class="bg-white rounded-lg shadow-md p-6 max-w-2xl mx-auto">
+    <form method="POST" action="{{ url_for('add_sale') }}">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label for="item_type" class="block text-gray-700 font-medium mb-2">商品类型 <span class="text-red-500">*</span></label>
+                <select id="item_type" name="item_type" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">请选择类型</option>
+                    <option value="book">书籍</option>
+                    <option value="journal">期刊</option>
+                </select>
+            </div>
+            <div>
+                <label for="item_id" class="block text-gray-700 font-medium mb-2">选择商品 <span class="text-red-500">*</span></label>
+                <select id="item_id" name="item_id" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">请先选择类型</option>
+                </select>
+            </div>
+            <div>
+                <label for="customer_id" class="block text-gray-700 font-medium mb-2">选择客户 <span class="text-red-500">*</span></label>
+                <select id="customer_id" name="customer_id" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">请选择客户</option>
+                    {% for customer in customers %}
+                    <option value="{{ customer.id }}">{{ customer.name }} ({{ customer.phone }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="quantity" class="block text-gray-700 font-medium mb-2">数量 <span class="text-red-500">*</span></label>
+                <input type="number" id="quantity" name="quantity" min="1" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+            <div>
+                <label for="price" class="block text-gray-700 font-medium mb-2">单价 <span class="text-red-500">*</span></label>
+                <input type="number" id="price" name="price" step="0.01" min="0.01" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+            <div>
+                <label for="total_price" class="block text-gray-700 font-medium mb-2">总价 <span class="text-red-500">*</span></label>
+                <input type="number" id="total_price" name="total_price" step="0.01" min="0.01" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+        </div>
+
+        <div class="mt-6 flex justify-end">
+            <a href="{{ url_for('sales') }}" class="mr-3 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-200">取消</a>
+            <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-6 rounded-lg shadow transition duration-300">保存</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // 根据商品类型动态加载商品选项
+    document.getElementById('item_type').addEventListener('change', function() {
+        const itemType = this.value;
+        const itemSelect = document.getElementById('item_id');
+
+        // 清空当前选项
+        itemSelect.innerHTML = '<option value="">加载中...</option>';
+
+        // 异步加载商品
+        fetch(`{{ url_for('get_items_by_type', type='') }}${itemType}`)
+            .then(response => response.json())
+            .then(data => {
+                itemSelect.innerHTML = '<option value="">请选择商品</option>';
+                data.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.id;
+                    option.textContent = `${item.name} (库存: ${item.stock})`;
+                    itemSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading items:', error);
+                itemSelect.innerHTML = '<option value="">加载失败</option>';
+            });
+    });
+
+    // 自动计算总价
+    document.getElementById('quantity').addEventListener('input', calculateTotal);
+    document.getElementById('price').addEventListener('input', calculateTotal);
+
+    function calculateTotal() {
+        const quantity = parseFloat(document.getElementById('quantity').value) || 0;
+        const price = parseFloat(document.getElementById('price').value) || 0;
+        const total = quantity * price;
+
+        document.getElementById('total_price').value = total.toFixed(2);
+    }
+</script>
+{% endblock %}

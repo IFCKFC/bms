@@ -1,0 +1,131 @@
+<head>
+    <meta charset="UTF-8">
+</head>
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-800 mb-2">欢迎使用书店管理系统</h2>
+    <p class="text-gray-600">管理您的书籍、期刊、客户和销售记录</p>
+</div>
+
+<!-- 统计卡片 -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="bg-white p-6 rounded-lg shadow hover-scale">
+        <p class="text-gray-500">总书籍数</p>
+        <h3 class="text-3xl font-bold mt-1">{{ book_count }}</h3>
+        <a href="{{ url_for('books') }}" class="text-blue-500 hover:underline mt-2 inline-block">
+            <i class="fa fa-book mr-1"></i> 查看全部
+        </a>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow hover-scale">
+        <p class="text-gray-500">总期刊数</p>
+        <h3 class="text-3xl font-bold mt-1">{{ journal_count }}</h3>
+        <a href="{{ url_for('journals') }}" class="text-blue-500 hover:underline mt-2 inline-block">
+            <i class="fa fa-newspaper-o mr-1"></i> 查看全部
+        </a>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow hover-scale">
+        <p class="text-gray-500">总客户数</p>
+        <h3 class="text-3xl font-bold mt-1">{{ customer_count }}</h3>
+        <a href="{{ url_for('customers') }}" class="text-blue-500 hover:underline mt-2 inline-block">
+            <i class="fa fa-users mr-1"></i> 查看全部
+        </a>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow hover-scale">
+        <p class="text-gray-500">当前借阅</p>
+        <h3 class="text-3xl font-bold mt-1">{{ borrow_count }}</h3>
+        <a href="{{ url_for('returns') }}" class="text-blue-500 hover:underline mt-2 inline-block">
+            <i class="fa fa-exchange mr-1"></i> 处理归还
+        </a>
+    </div>
+</div>
+
+<!-- 快速操作按钮 -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <a href="{{ url_for('add_book') }}" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg shadow transition duration-300 flex items-center justify-center">
+        <i class="fa fa-book mr-2"></i> 添加书籍
+    </a>
+    <a href="{{ url_for('add_borrow') }}" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg shadow transition duration-300 flex items-center justify-center">
+        <i class="fa fa-exchange mr-2"></i> 处理借阅
+    </a>
+    <a href="{{ url_for('add_sale') }}" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-4 rounded-lg shadow transition duration-300 flex items-center justify-center">
+        <i class="fa fa-shopping-cart mr-2"></i> 记录销售
+    </a>
+    <a href="{{ url_for('statistics') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-4 rounded-lg shadow transition duration-300 flex items-center justify-center">
+        <i class="fa fa-bar-chart mr-2"></i> 销售统计
+    </a>
+</div>
+
+<!-- 最近活动 -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="bg-white p-6 rounded-lg shadow">
+        <h3 class="text-xl font-bold mb-4 flex items-center">
+            <i class="fa fa-clock-o text-primary mr-2"></i> 最近借阅
+        </h3>
+        <ul>
+            {% for borrow in recent_borrows %}
+            <li class="border-b pb-2 mb-2">
+                <div class="flex justify-between">
+                    <p class="font-medium">
+                        {% if borrow.item_type == 'book' and borrow.book %}
+                            {{ borrow.book.title }}
+                        {% elif borrow.item_type == 'journal' and borrow.journal %}
+                            {{ borrow.journal.title }}
+                        {% else %}
+                            未知商品 (ID: {{ borrow.item_id }})
+                        {% endif %}
+                    </p>
+                    <span class="px-2 py-1 text-xs rounded-full {{ 'bg-green-100 text-green-800' if borrow.status == '已归还' else 'bg-yellow-100 text-yellow-800' }}">
+                        {{ borrow.status }}
+                    </span>
+                </div>
+                <p class="text-sm text-gray-500">
+                    {{ borrow.customer.name }} -
+                    {{ borrow.borrow_date.strftime('%Y-%m-%d') }}
+                    {% if borrow.status == '未归还' %}
+                        <span class="text-red-500">(应还: {{ borrow.due_date.strftime('%Y-%m-%d') }})</span>
+                    {% endif %}
+                </p>
+            </li>
+            {% endfor %}
+        </ul>
+        <a href="{{ url_for('borrows') }}" class="text-blue-500 hover:underline mt-4 inline-block flex items-center">
+            查看全部借阅记录 <i class="fa fa-arrow-right ml-1"></i>
+        </a>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow">
+        <h3 class="text-xl font-bold mb-4 flex items-center">
+            <i class="fa fa-shopping-cart text-secondary mr-2"></i> 最近销售
+        </h3>
+        <ul>
+            {% for sale in recent_sales %}
+            <li class="border-b pb-2 mb-2">
+                <div class="flex justify-between">
+                    <p class="font-medium">
+                        {% if sale.item_type == 'book' and sale.book %}
+                            {{ sale.book.title }}
+                        {% elif sale.item_type == 'journal' and sale.journal %}
+                            {{ sale.journal.title }}
+                        {% else %}
+                            未知商品 (ID: {{ sale.item_id }})
+                        {% endif %}
+                    </p>
+                    <p class="font-medium">¥{{ sale.total_price }}</p>
+                </div>
+                <p class="text-sm text-gray-500">
+                    客户: {{ sale.customer.name }} -
+                    数量: {{ sale.quantity }} -
+                    {{ sale.sale_date.strftime('%Y-%m-%d %H:%M') }}
+                </p>
+            </li>
+            {% endfor %}
+        </ul>
+        <a href="{{ url_for('sales') }}" class="text-blue-500 hover:underline mt-4 inline-block flex items-center">
+            查看全部销售记录 <i class="fa fa-arrow-right ml-1"></i>
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>书店管理系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                        accent: '#8B5CF6',
+                        danger: '#EF4444',
+                        warning: '#F59E0B',
+                        info: '#06B6D4',
+                        light: '#F3F4F6',
+                        dark: '#1F2937'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .card-shadow {
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            }
+            .hover-scale {
+                transition: transform 0.3s ease;
+            }
+            .hover-scale:hover {
+                transform: scale(1.02);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- 导航栏 -->
+    <nav class="bg-primary text-white shadow-md">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-bookstore text-2xl"></i>
+                <h1 class="text-xl font-bold">书店管理系统</h1>
+            </div>
+            <div class="hidden md:flex space-x-6">
+                <a href="{{ url_for('index') }}" class="hover:text-gray-200 transition-colors">
+                    <i class="fa fa-home mr-1"></i> 首页
+                </a>
+                <a href="{{ url_for('books') }}" class="hover:text-gray-200 transition-colors">
+                    <i class="fa fa-book mr-1"></i> 书籍
+                </a>
+                <a href="{{ url_for('journals') }}" class="hover:text-gray-200 transition-colors">
+                    <i class="fa fa-newspaper-o mr-1"></i> 期刊
+                </a>
+                <a href="{{ url_for('customers') }}" class="hover:text-gray-200 transition-colors">
+                    <i class="fa fa-users mr-1"></i> 客户
+                </a>
+                <a href="{{ url_for('borrows') }}" class="hover:text-gray-200 transition-colors">
+                    <i class="fa fa-exchange mr-1"></i> 借阅
+                </a>
+                <a href="{{ url_for('sales') }}" class="hover:text-gray-200 transition-colors">
+                    <i class="fa fa-shopping-cart mr-1"></i> 销售
+                </a>
+                <a href="{{ url_for('statistics') }}" class="hover:text-gray-200 transition-colors">
+                    <i class="fa fa-bar-chart mr-1"></i> 统计
+                </a>
+            </div>
+            <div class="md:hidden">
+                <button id="menu-toggle" class="focus:outline-none">
+                    <i class="fa fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+        <!-- 移动端菜单 -->
+        <div id="mobile-menu" class="hidden md:hidden bg-primary/95 backdrop-blur-sm">
+            <div class="container mx-auto px-4 py-2 space-y-3">
+                <a href="{{ url_for('index') }}" class="block py-2 hover:text-gray-200 transition-colors">
+                    <i class="fa fa-home mr-1"></i> 首页
+                </a>
+                <a href="{{ url_for('books') }}" class="block py-2 hover:text-gray-200 transition-colors">
+                    <i class="fa fa-book mr-1"></i> 书籍
+                </a>
+                <a href="{{ url_for('journals') }}" class="block py-2 hover:text-gray-200 transition-colors">
+                    <i class="fa fa-newspaper-o mr-1"></i> 期刊
+                </a>
+                <a href="{{ url_for('customers') }}" class="block py-2 hover:text-gray-200 transition-colors">
+                    <i class="fa fa-users mr-1"></i> 客户
+                </a>
+                <a href="{{ url_for('borrows') }}" class="block py-2 hover:text-gray-200 transition-colors">
+                    <i class="fa fa-exchange mr-1"></i> 借阅
+                </a>
+                <a href="{{ url_for('sales') }}" class="block py-2 hover:text-gray-200 transition-colors">
+                    <i class="fa fa-shopping-cart mr-1"></i> 销售
+                </a>
+                <a href="{{ url_for('statistics') }}" class="block py-2 hover:text-gray-200 transition-colors">
+                    <i class="fa fa-bar-chart mr-1"></i> 统计
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="flex-grow container mx-auto px-4 py-6">
+        <!-- 消息提示 -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="mb-4 p-4 rounded-lg shadow-md
+                        {% if category == 'success' %} bg-green-100 text-green-800 {% endif %}
+                        {% if category == 'error' %} bg-red-100 text-red-800 {% endif %}
+                        {% if category == 'warning' %} bg-yellow-100 text-yellow-800 {% endif %}
+                        {% if category == 'info' %} bg-blue-100 text-blue-800 {% endif %}">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                {% if category == 'success' %}
+                                    <i class="fa fa-check-circle text-green-500"></i>
+                                {% elif category == 'error' %}
+                                    <i class="fa fa-exclamation-circle text-red-500"></i>
+                                {% elif category == 'warning' %}
+                                    <i class="fa fa-exclamation-triangle text-yellow-500"></i>
+                                {% elif category == 'info' %}
+                                    <i class="fa fa-info-circle text-blue-500"></i>
+                                {% endif %}
+                            </div>
+                            <div class="ml-3">
+                                <p>{{ message }}</p>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- 页面内容 -->
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-white py-6">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <h3 class="text-lg font-bold">书店管理系统</h3>
+                    <p class="text-gray-400 text-sm">高效管理您的书店业务</p>
+                </div>
+                <a href="https://www.upc.edu.cn/" class="text-gray-400 hover:text-white transition-colors">
+                    <img src="static/upc_logo.jpeg" alt="中国石油大学（华东）校徽" class="w-6 h-6">
+                </a>
+            </div>
+            <div class="mt-6 pt-6 border-t border-gray-700 text-center text-gray-400 text-sm">
+                &copy; 2025 书店管理系统 | 版权所有
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // 移动端菜单切换
+        document.getElementById('menu-toggle').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>

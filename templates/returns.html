@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-800 mb-2">归还处理</h2>
+    <p class="text-gray-600">处理未归还的借阅记录</p>
+</div>
+
+<div class="flex justify-between items-center mb-6">
+    <div class="relative">
+        <input type="text" placeholder="搜索未归还记录..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+    </div>
+</div>
+
+<div class="overflow-x-auto">
+    <table class="min-w-full bg-white rounded-lg shadow-md">
+        <thead>
+            <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                <th class="py-3 px-6 text-left">ID</th>
+                <th class="py-3 px-6 text-left">书籍</th>
+                <th class="py-3 px-6 text-left">客户</th>
+                <th class="py-3 px-6 text-left">借阅日期</th>
+                <th class="py-3 px-6 text-left">应归还日期</th>
+                <th class="py-3 px-6 text-left">逾期天数</th>
+                <th class="py-3 px-6 text-center">操作</th>
+            </tr>
+        </thead>
+        <tbody class="text-gray-600 text-sm">
+            {% for borrow in borrows %}
+            <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-200">
+                <td class="py-3 px-6">{{ borrow.id }}</td>
+                <td class="py-3 px-6">
+                    <div class="flex items-center">
+                        <div class="mr-3">
+                            <img src="https://picsum.photos/seed/book{{ borrow.book.id }}/40/60" alt="{{ borrow.book.title }}" class="w-10 h-14 object-cover rounded">
+                        </div>
+                        <span>{{ borrow.book.title }}</span>
+                    </div>
+                </td>
+                <td class="py-3 px-6">
+                    <div>{{ borrow.customer.name }}</div>
+                    <div class="text-xs text-gray-500">{{ borrow.customer.phone }}</div>
+                </td>
+                <td class="py-3 px-6">{{ borrow.borrow_date.strftime('%Y-%m-%d') }}</td>
+                <td class="py-3 px-6">
+                    <span class="{{ 'text-red-600' if borrow.due_date < now else 'text-gray-600' }}">
+                        {{ borrow.due_date.strftime('%Y-%m-%d') }}
+                    </span>
+                </td>
+                <td class="py-3 px-6">
+                    {% if borrow.due_date < now %}
+                        <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">
+                            {{ (now - borrow.due_date).days }} 天
+                        </span>
+                    {% else %}
+                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                            未逾期
+                        </span>
+                    {% endif %}
+                </td>
+                <td class="py-3 px-6 text-center">
+                     <form action="{{ url_for('process_return', id=borrow.id) }}" method="POST">
+                         <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition duration-200">
+                             处理归还
+                         </button>
+                     </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- 分页 -->
+<div class="mt-6 flex justify-between items-center">
+    <div class="text-sm text-gray-600">
+        显示 1 到 {{ borrows|length }} 条，共 {{ borrows|length }} 条记录
+    </div>
+    <div class="flex space-x-1">
+        <a href="#" class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-100 transition duration-200">上一页</a>
+        <a href="#" class="px-3 py-1 bg-blue-500 text-white border border-blue-500 rounded">1</a>
+        <a href="#" class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-100 transition duration-200">下一页</a>
+    </div>
+</div>
+{% endblock %}

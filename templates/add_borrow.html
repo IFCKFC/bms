@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-800 mb-2">新增借阅</h2>
+    <p class="text-gray-600">填写以下信息记录借阅</p>
+</div>
+
+<div class="bg-white rounded-lg shadow-md p-6 max-w-2xl mx-auto">
+    <form method="POST" action="{{ url_for('add_borrow') }}">
+        <div class="grid grid-cols-1 gap-6">
+            <div>
+                <label for="item_type" class="block text-gray-700 font-medium mb-2">借阅类型 <span class="text-red-500">*</span></label>
+                <select id="item_type" name="item_type" onchange="toggleSelection()" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">请选择</option>
+                    <option value="book">书籍</option>
+                    <option value="journal">期刊</option>
+                </select>
+            </div>
+            <div id="book_selection" style="display: none;">
+                <label for="book_id" class="block text-gray-700 font-medium mb-2">选择书籍 <span class="text-red-500">*</span></label>
+                <select id="book_id" name="book_id" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">请选择书籍</option>
+                    {% for book in books %}
+                        <option value="{{ book.id }}" {% if book.stock == 0 %}disabled{% endif %}>
+                            {{ book.title }} (库存: {{ book.stock }}) {% if book.stock == 0 %}(库存不足){% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div id="journal_selection" style="display: none;">
+                <label for="journal_id" class="block text-gray-700 font-medium mb-2">选择期刊 <span class="text-red-500">*</span></label>
+                <select id="journal_id" name="journal_id" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">请选择期刊</option>
+                    {% for journal in journals %}
+                        <option value="{{ journal.id }}" {% if journal.stock == 0 %}disabled{% endif %}>
+                            {{ journal.title }} (库存: {{ journal.stock }}) {% if journal.stock == 0 %}(库存不足){% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="customer_id" class="block text-gray-700 font-medium mb-2">选择客户 <span class="text-red-500">*</span></label>
+                <select id="customer_id" name="customer_id" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">请选择客户</option>
+                    {% for customer in customers %}
+                        <option value="{{ customer.id }}">{{ customer.name }} ({{ customer.phone }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="due_date" class="block text-gray-700 font-medium mb-2">应还日期 <span class="text-red-500">*</span></label>
+                <input type="date" id="due_date" name="due_date" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+        </div>
+
+        <div class="mt-6 flex justify-end">
+            <a href="{{ url_for('borrows') }}" class="mr-3 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-200">取消</a>
+            <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-6 rounded-lg shadow transition duration-300">保存</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function toggleSelection() {
+        var itemType = document.getElementById('item_type').value;
+        var bookSelection = document.getElementById('book_selection');
+        var journalSelection = document.getElementById('journal_selection');
+
+        if (itemType === 'book') {
+            bookSelection.style.display = 'block';
+            journalSelection.style.display = 'none';
+        } else if (itemType === 'journal') {
+            bookSelection.style.display = 'none';
+            journalSelection.style.display = 'block';
+        } else {
+            bookSelection.style.display = 'none';
+            journalSelection.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}

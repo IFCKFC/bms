@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-800 mb-2">销售记录</h2>
+    <p class="text-gray-600">查看和管理所有销售交易</p>
+</div>
+
+<!-- 搜索表单 -->
+<div class="flex justify-between items-center mb-6">
+    <div class="relative w-full md:w-1/2">
+        <form action="{{ url_for('sales') }}" method="GET">
+            <input type="text"
+                   name="search"
+                   placeholder="搜索销售记录 (商品/客户/日期)..."
+                   value="{{ search_query }}"
+                   class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+        </form>
+    </div>
+    <a href="{{ url_for('add_sale') }}" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow flex items-center transition duration-300">
+        <i class="fa fa-plus mr-2"></i> 新增销售
+    </a>
+</div>
+
+<!-- 搜索结果提示 -->
+{% if search_query %}
+<div class="mb-6 p-4 bg-gray-100 rounded-lg">
+    <p class="text-gray-700">搜索结果: <strong>{{ sales|length }}</strong> 条记录匹配 "<strong>{{ search_query }}</strong>"</p>
+</div>
+{% endif %}
+
+<!-- 销售记录表格 -->
+<div class="overflow-x-auto">
+    <table class="min-w-full bg-white rounded-lg shadow-md">
+        <thead>
+            <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                <th class="py-3 px-6 text-left">ID</th>
+                <th class="py-3 px-6 text-left">商品</th>
+                <th class="py-3 px-6 text-left">客户</th>
+                <th class="py-3 px-6 text-left">数量</th>
+                <th class="py-3 px-6 text-left">单价</th>
+                <th class="py-3 px-6 text-left">总价</th>
+                <th class="py-3 px-6 text-left">销售日期</th>
+                <th class="py-3 px-6 text-center">操作</th>
+            </tr>
+        </thead>
+        <tbody class="text-gray-600 text-sm">
+            {% for sale in sales %}
+            <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-200">
+                <td class="py-3 px-6">{{ sale.id }}</td>
+                <td class="py-3 px-6">
+                    <div class="flex items-center">
+                        <div class="mr-3">
+                            {% if sale.item_type == 'book' and sale.book %}
+                                <img src="https://picsum.photos/seed/book{{ sale.item_id }}/40/60" alt="{{ sale.book.title }}" class="w-10 h-14 object-cover rounded">
+                            {% elif sale.item_type == 'journal' and sale.journal %}
+                                <img src="https://picsum.photos/seed/journal{{ sale.item_id }}/40/60" alt="{{ sale.journal.title }}" class="w-10 h-14 object-cover rounded">
+                            {% else %}
+                                <img src="https://picsum.photos/seed/unknown/40/60" alt="未知商品" class="w-10 h-14 object-cover rounded">
+                            {% endif %}
+                        </div>
+                        <div>
+                            <span class="font-medium">
+                                {% if sale.item_type == 'book' and sale.book %}
+                                    {% if search_query and search_query|lower in sale.book.title|lower %}
+                                        {{ sale.book.title|ireplace(search_query, '<span class="bg-yellow-200 font-medium">' + search_query + '</span>')|safe }}
+                                    {% else %}
+                                        {{ sale.book.title }}
+                                    {% endif %}
+                                {% elif sale.item_type == 'journal' and sale.journal %}
+                                    {% if search_query and search_query|lower in sale.journal.title|lower %}
+                                        {{ sale.journal.title|ireplace(search_query, '<span class="bg-yellow-200 font-medium">' + search_query + '</span>')|safe }}
+                                    {% else %}
+                                        {{ sale.journal.title }}
+                                    {% endif %}
+                                {% else %}
+                                    未知商品 (ID: {{ sale.item_id }})
+                                {% endif %}
+                            </span>
+                            <div class="text-xs text-gray-500">
+                                {% if sale.item_type == 'book' and sale.book %}
+                                    {% if search_query and search_query|lower in sale.book.author|lower %}
+                                        {{ sale.book.author|ireplace(search_query, '<span class="bg-yellow-200">' + search_query + '</span>')|safe }}
+                                    {% else %}
+                                        {{ sale.book.author }}
+                                    {% endif %}
+                                {% elif sale.item_type == 'journal' and sale.journal %}
+                                    {% if search_query and search_query|lower in sale.journal.publisher|lower %}
+                                        {{ sale.journal.publisher|ireplace(search_query, '<span class="bg-yellow-200">' + search_query + '</span>')|safe }}
+                                    {% else %}
+                                        {{ sale.journal.publisher }}
+                                    {% endif %}
+                                {% else %}
+                                    信息缺失
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </td>
+                <td class="py-3 px-6">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                            <span class="font-medium text-blue-600">{{ sale.customer.name[0] }}</span>
+                        </div>
+                        <span>
+                            {% if search_query and search_query|lower in sale.customer.name|lower %}
+                                {{ sale.customer.name|ireplace(search_query, '<span class="bg-yellow-200 font-medium">' + search_query + '</span>')|safe }}
+                            {% else %}
+                                {{ sale.customer.name }}
+                            {% endif %}
+                        </span>
+                    </div>
+                </td>
+                <td class="py-3 px-6">{{ sale.quantity }}</td>
+                <td class="py-3 px-6">¥{{ sale.price }}</td>
+                <td class="py-3 px-6 font-medium text-blue-600">¥{{ sale.total_price }}</td>
+                <td class="py-3 px-6">
+                    {% if search_query and search_query|lower in sale.sale_date.strftime('%Y-%m-%d %H:%M')|lower %}
+                        {{ sale.sale_date.strftime('%Y-%m-%d %H:%M')|ireplace(search_query, '<span class="bg-yellow-200">' + search_query + '</span>')|safe }}
+                    {% else %}
+                        {{ sale.sale_date.strftime('%Y-%m-%d %H:%M') }}
+                    {% endif %}
+                </td>
+                <td class="py-3 px-6 text-center">
+                    <div class="flex item-center justify-center">
+                        <a href="#" class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded mr-2 transition duration-200">
+                            <i class="fa fa-eye"></i>
+                        </a>
+                        <a href="{{ url_for('delete_sale', id=sale.id) }}" class="bg-red-500 hover:bg-red-600 text-white p-2 rounded transition duration-200" onclick="return confirm('确定要删除这条销售记录吗?')">
+                            <i class="fa fa-trash"></i>
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="8" class="py-8 text-center text-gray-500">
+                    {% if search_query %}
+                        没有找到匹配 "<strong>{{ search_query }}</strong>" 的销售记录
+                    {% else %}
+                        暂无销售记录
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- 分页 -->
+<div class="mt-6 flex justify-between items-center">
+    <div class="text-sm text-gray-600">
+        显示 1 到 {{ sales|length }} 条，共 {{ sales|length }} 条记录
+    </div>
+    <div class="flex space-x-1">
+        <a href="#" class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-100 transition duration-200">上一页</a>
+        <a href="#" class="px-3 py-1 bg-blue-500 text-white border border-blue-500 rounded">1</a>
+        <a href="#" class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-100 transition duration-200">下一页</a>
+    </div>
+</div>
+{% endblock %}

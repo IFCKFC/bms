@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-800 mb-2">借阅管理</h2>
+    <p class="text-gray-600">查看和管理所有借阅记录</p>
+</div>
+
+<!-- 搜索表单 -->
+<div class="flex justify-between items-center mb-6">
+    <div class="relative w-full md:w-1/2">
+        <form action="{{ url_for('borrows') }}" method="GET">
+            <input type="text"
+                   name="search"
+                   placeholder="搜索借阅记录 (书籍/客户/日期/状态)..."
+                   value="{{ search_query }}"
+                   class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+        </form>
+    </div>
+    <a href="{{ url_for('add_borrow') }}" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow flex items-center transition duration-300">
+        <i class="fa fa-plus mr-2"></i> 新增借阅
+    </a>
+</div>
+
+<!-- 搜索结果提示 -->
+{% if search_query %}
+<div class="mb-6 p-4 bg-gray-100 rounded-lg">
+    <p class="text-gray-700">搜索结果: <strong>{{ borrows.total }}</strong> 条记录匹配 "<strong>{{ search_query }}</strong>"</p>
+</div>
+{% endif %}
+
+<!-- 借阅记录表格 -->
+<div class="overflow-x-auto">
+    <table class="min-w-full bg-white rounded-lg shadow-md">
+        <thead>
+            <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                <th class="py-3 px-6 text-left">ID</th>
+                <th class="py-3 px-6 text-left">书籍</th>
+                <th class="py-3 px-6 text-left">客户</th>
+                <th class="py-3 px-6 text-left">借阅日期</th>
+                <th class="py-3 px-6 text-left">应归还日期</th>
+                <th class="py-3 px-6 text-left">实际归还日期</th>
+                <th class="py-3 px-6 text-left">状态</th>
+                <th class="py-3 px-6 text-center">操作</th>
+            </tr>
+        </thead>
+        <tbody class="text-gray-600 text-sm">
+            {% for borrow in borrows.items %}
+            <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-200">
+                <td class="py-3 px-6">{{ borrow.id }}</td>
+                <td class="py-3 px-6">
+                    <div class="flex items-center">
+                        <div class="mr-3">
+                            <img src="https://picsum.photos/seed/book{{ borrow.book_id }}/40/60" alt="{{ borrow.book.title }}" class="w-10 h-14 object-cover rounded">
+                        </div>
+                        <span>
+                            {% if search_query and search_query|lower in borrow.book.title|lower %}
+                                {{ borrow.book.title|ireplace(search_query, '<span class="bg-yellow-200 font-medium">' + search_query + '</span>')|safe }}
+                            {% else %}
+                                {{ borrow.book.title }}
+                            {% endif %}
+                        </span>
+                    </div>
+                </td>
+                <td class="py-3 px-6">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                            {% if borrow.customer %}
+                                <span class="font-medium text-blue-600">{{ borrow.customer.name[0] }}</span>
+                            {% else %}
+                                <span class="font-medium text-blue-600">无</span>
+                            {% endif %}
+                        </div>
+                        <span>
+                            {% if borrow.customer and search_query and search_query|lower in borrow.customer.name|lower %}
+                                {{ borrow.customer.name|ireplace(search_query, '<span class="bg-yellow-200 font-medium">' + search_query + '</span>')|safe }}
+                            {% elif borrow.customer %}
+                                {{ borrow.customer.name }}
+                            {% else %}
+                                无客户信息
+                            {% endif %}
+                        </span>
+                    </div>
+                </td>
+                <td class="py-3 px-6">
+                    {% if search_query and search_query|lower in borrow.borrow_date.strftime('%Y-%m-%d')|lower %}
+                        {{ borrow.borrow_date.strftime('%Y-%m-%d')|ireplace(search_query, '<span class="bg-yellow-200">' + search_query + '</span>')|safe }}
+                    {% else %}
+                        {{ borrow.borrow_date.strftime('%Y-%m-%d') }}
+                    {% endif %}
+                </td>
+                <td class="py-3 px-6 {{ 'text-red-500' if borrow.status == '未归还' and borrow.due_date < datetime.now() else '' }}">
+                    {% if search_query and search_query|lower in borrow.due_date.strftime('%Y-%m-%d')|lower %}
+                        {{ borrow.due_date.strftime('%Y-%m-%d')|ireplace(search_query, '<span class="bg-yellow-200">' + search_query + '</span>')|safe }}
+                    {% else %}
+                        {{ borrow.due_date.strftime('%Y-%m-%d') }}
+                    {% endif %}
+                </td>
+                <td class="py-3 px-6">
+                    {% if borrow.return_date %}
+                        {% if search_query and search_query|lower in borrow.return_date.strftime('%Y-%m-%d')|lower %}
+                            {{ borrow.return_date.strftime('%Y-%m-%d')|ireplace(search_query, '<span class="bg-yellow-200">' + search_query + '</span>')|safe }}
+                        {% else %}
+                            {{ borrow.return_date.strftime('%Y-%m-%d') }}
+                        {% endif %}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td class="py-3 px-6">
+                    <span class="px-2 py-1 rounded-full text-xs
+                        {{ 'bg-green-100 text-green-800' if borrow.status == '已归还' else 'bg-yellow-100 text-yellow-800' }}
+                        {{ 'bg-red-100 text-red-800' if borrow.status == '未归还' and borrow.due_date < datetime.now() else '' }}">
+                        {% if search_query and search_query|lower in borrow.status|lower %}
+                            {{ borrow.status|ireplace(search_query, '<span class="bg-yellow-200">' + search_query + '</span>')|safe }}
+                        {% else %}
+                            {{ borrow.status }}
+                        {% endif %}
+                        {{ ' (逾期)' if borrow.status == '未归还' and borrow.due_date < datetime.now() else '' }}
+                    </span>
+                </td>
+                <td class="py-3 px-6 text-center">
+                    <div class="flex item-center justify-center">
+                        {% if borrow.status == '未归还' %}
+                        <form action="{{ url_for('process_return', id=borrow.id) }}" method="POST">
+                            <button type="submit" class="bg-green-500 hover:bg-green-600 text-white p-2 rounded transition duration-200">
+                                <i class="fa fa-check"></i> 处理归还
+                            </button>
+                        </form>
+                        {% endif %}
+                        <a href="{{ url_for('delete_borrow', id=borrow.id) }}" class="bg-red-500 hover:bg-red-600 text-white p-2 rounded transition duration-200" onclick="return confirm('确定要删除这条借阅记录吗？')">
+                            <i class="fa fa-trash"></i>
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="8" class="py-8 text-center text-gray-500">
+                    {% if search_query %}
+                        没有找到匹配 "<strong>{{ search_query }}</strong>" 的借阅记录
+                    {% else %}
+                        暂无借阅记录
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- 分页 -->
+<div class="mt-6 flex justify-between items-center">
+    <div class="text-sm text-gray-600">
+        显示 {{ borrows.page }} 到 {{ borrows.end }} 条，共 {{ borrows.total }} 条记录
+    </div>
+    <div class="flex space-x-1">
+        <a href="{{ url_for('borrows', page=borrows.prev_num, search=search_query) if borrows.has_prev else '#' }}"
+           class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-100 transition duration-200 {% if not borrows.has_prev %}opacity-50 cursor-not-allowed{% endif %}">
+            上一页
+        </a>
+        {% for page_num in borrows.iter_pages(left_edge=1, left_current=2, right_current=3, right_edge=1) %}
+            {% if page_num %}
+                <a href="{{ url_for('borrows', page=page_num, search=search_query) }}"
+                   class="px-3 py-1 bg-{% if page_num == borrows.page %}blue-500 text-white border border-blue-500{% else %}gray-100{% endif %} rounded transition duration-200">
+                    {{ page_num }}
+                </a>
+            {% else %}
+                <span class="px-3 py-1 text-gray-500">...</span>
+            {% endif %}
+        {% endfor %}
+        <a href="{{ url_for('borrows', page=borrows.next_num, search=search_query) if borrows.has_next else '#' }}"
+           class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-100 transition duration-200 {% if not borrows.has_next %}opacity-50 cursor-not-allowed{% endif %}">
+            下一页
+        </a>
+    </div>
+</div>
+{% endblock %}

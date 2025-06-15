@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-800 mb-2">期刊管理</h2>
+    <p class="text-gray-600">查看和管理所有期刊</p>
+</div>
+
+<!-- 搜索表单 -->
+<div class="flex justify-between items-center mb-6">
+    <div class="relative w-full md:w-1/2">
+        <form action="{{ url_for('journals') }}" method="GET">
+            <input type="text"
+                   name="search"
+                   placeholder="搜索期刊 (期刊名/出版社/类别)..."
+                   value="{{ search_query }}"
+                   class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+        </form>
+    </div>
+    <a href="{{ url_for('add_journal') }}" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow flex items-center transition duration-300">
+        <i class="fa fa-plus mr-2"></i> 添加期刊
+    </a>
+</div>
+
+<!-- 搜索结果提示 -->
+{% if search_query %}
+<div class="mb-6 p-4 bg-gray-100 rounded-lg">
+    <p class="text-gray-700">搜索结果: <strong>{{ journals|length }}</strong> 条记录匹配 "<strong>{{ search_query }}</strong>"</p>
+</div>
+{% endif %}
+
+<!-- 期刊表格 -->
+<div class="overflow-x-auto">
+    <table class="min-w-full bg-white rounded-lg shadow-md">
+        <thead>
+            <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                <th class="py-3 px-6 text-left">ID</th>
+                <th class="py-3 px-6 text-left">期刊名</th>
+                <th class="py-3 px-6 text-left">出版社</th>
+                <th class="py-3 px-6 text-left">类别</th>
+                <th class="py-3 px-6 text-left">最新期号</th>
+                <th class="py-3 px-6 text-left">库存</th>
+                <th class="py-3 px-6 text-left">价格</th>
+                <th class="py-3 px-6 text-center">操作</th>
+            </tr>
+        </thead>
+        <tbody class="text-gray-600 text-sm">
+            {% for journal in journals %}
+            <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-200">
+                <td class="py-3 px-6">{{ journal.id }}</td>
+                <td class="py-3 px-6">
+                    <div class="flex items-center">
+                        <div class="mr-3">
+                            <img src="https://picsum.photos/seed/journal{{ journal.id }}/40/60" alt="{{ journal.title }}" class="w-10 h-14 object-cover rounded">
+                        </div>
+                        <span>
+                            {% if search_query and search_query|lower in journal.title|lower %}
+                                {{ journal.title|ireplace(search_query, '<span class="bg-yellow-200 font-medium">' + search_query + '</span>')|safe }}
+                            {% else %}
+                                {{ journal.title }}
+                            {% endif %}
+                        </span>
+                    </div>
+                </td>
+                <td class="py-3 px-6">
+                    {% if search_query and search_query|lower in journal.publisher|lower %}
+                        {{ journal.publisher|ireplace(search_query, '<span class="bg-yellow-200">' + search_query + '</span>')|safe }}
+                    {% else %}
+                        {{ journal.publisher }}
+                    {% endif %}
+                </td>
+                <td class="py-3 px-6">
+                    {% if search_query and search_query|lower in journal.category|lower %}
+                        {{ journal.category|ireplace(search_query, '<span class="bg-yellow-200">' + search_query + '</span>')|safe }}
+                    {% else %}
+                        {{ journal.category }}
+                    {% endif %}
+                </td>
+                <td class="py-3 px-6">
+                    {% if search_query and search_query|lower in journal.latest_issue|lower %}
+                        {{ journal.latest_issue|ireplace(search_query, '<span class="bg-yellow-200">' + search_query + '</span>')|safe }}
+                    {% else %}
+                        {{ journal.latest_issue }}
+                    {% endif %}
+                </td>
+                <td class="py-3 px-6">
+                    <span class="{{ 'text-green-600' if journal.stock > 0 else 'text-red-600' }} font-medium">
+                        {{ journal.stock }}
+                    </span>
+                </td>
+                <td class="py-3 px-6">¥{{ journal.price }}</td>
+                <td class="py-3 px-6 text-center">
+                    <div class="flex item-center justify-center">
+                        <a href="{{ url_for('edit_journal', id=journal.id) }}" class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded mr-2 transition duration-200">
+                            <i class="fa fa-pencil"></i>
+                        </a>
+                        <a href="{{ url_for('delete_journal', id=journal.id) }}" class="bg-red-500 hover:bg-red-600 text-white p-2 rounded transition duration-200" onclick="return confirm('确定要删除这本期刊吗？')">
+                            <i class="fa fa-trash"></i>
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="8" class="py-8 text-center text-gray-500">
+                    {% if search_query %}
+                        没有找到匹配 "<strong>{{ search_query }}</strong>" 的期刊
+                    {% else %}
+                        暂无期刊记录
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- 分页 -->
+<div class="mt-6 flex justify-between items-center">
+    <div class="text-sm text-gray-600">
+        显示 1 到 {{ journals|length }} 条，共 {{ journals|length }} 条记录
+    </div>
+    <div class="flex space-x-1">
+        <a href="#" class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-100 transition duration-200">上一页</a>
+        <a href="#" class="px-3 py-1 bg-blue-500 text-white border border-blue-500 rounded">1</a>
+        <a href="#" class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-100 transition duration-200">下一页</a>
+    </div>
+</div>
+{% endblock %}
