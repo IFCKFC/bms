@@ -75,7 +75,7 @@ bms/
 │ ├── index.html # 首页模板
 │ └── statistics.html # 统计信息页面模板
 └── static/
-└── upc_logo.jpeg # 静态图片文件(中国石油大学(华东)校徽)
+  └── upc_logo.jpeg # 静态图片文件(中国石油大学(华东)校徽)
 
 ## 数据库配置
 
